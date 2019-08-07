@@ -1,0 +1,81 @@
+active: False
+
+####### Population and other
+population_size: 100
+chromosome_size: 100
+pool: False
+# default: cpu_count()
+pool_size: 4
+
+####### Stop conditions
+max_iteration: 8000
+max_fitness_eval:
+min_fitness:
+patience:
+stop: False
+
+############## Add new individuals methods
+
+####### Crossover selection
+crossover: True
+# options: random, tournament, better half
+selection_type: "random"
+# default: population_size // 4
+num_of_crossover:
+
+####### Differential evolution
+differential_evolution: False
+# [0, 1]
+CR: 0.6
+# [0, 2]
+F: 0.8
+
+####### Invasive weed
+invasive_weed: False
+iter_max: 1000
+e: 2
+sigma_init: 0.2
+sigma_fin: 0.05
+N_min: 16
+N_max: 32
+
+
+####### Add pure new individuals
+add_pure_new: False
+# default: population_size // 2
+num_of_new_individual: 10
+
+############## Modify all individuals methods
+
+####### Mutation
+mutation: True
+# options: basic, bacterial
+mutation_type: "bacterial"
+elitism: False
+mutation_random_sequence: False
+# basic [0, 1]
+mutation_probability: 0.2
+# bacterial
+num_of_clones: 1
+
+####### Memetic
+memetic: False
+lamarck_random_sequence: False
+step_size: 0.1
+number_of_steps: 1
+
+
+############## Swarm optimization
+swarm_iteration: True
+# options: pso, sso
+iteration_type: "pso"
+# pso
+norm: 0.1
+inertia: 1 
+phi_p: 1
+phi_g: 1
+# sso
+c_w: 0.2
+c_p: 0.4
+c_g: 0.8
+
