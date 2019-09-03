@@ -33,12 +33,12 @@ number_of_steps: 1
 patience: null
 phi_g: 4.0
 phi_p: 1.0
-pool: false
-pool_size: 4
+pool: true
+pool_size: 12
 population_size: 100
 selection_type: random
 sigma_fin: 0.05
 sigma_init: 0.2
 step_size: 0.1
 stop: false
-swarm_iteration: true
+swarm_iteration: false
