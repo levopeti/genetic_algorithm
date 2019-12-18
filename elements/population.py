@@ -14,7 +14,7 @@ class PopulationBase(ABC):
     """Base class of population for metaheuristic algorithms."""
 
     __slots__ = "__current_generation", "pop_size", "chromosome_size", "counter",\
-                "fitness_function", "global_best_individual", "pool", "pool_size"
+                "fitness_function", "global_best_individual", "pool", "pool_size", "__current_population"
 
     def __init__(self, pop_size, chromosome_size, fitness_function, pool, pool_size):
         """Initialise the Population."""

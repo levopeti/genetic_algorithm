@@ -5,13 +5,14 @@ import time
 np.random.seed(int(time.time()))
 
 
-def mutation_functions(mutation_type, mutation_probability=None, num_of_clones=None, mutation_random_sequence=False, **kwargs):
+def mutation_functions(mutation_type, mutation_probability=None, num_of_clones=None, mutation_random_sequence=False,
+                       **kwargs):
     """
     If mutation_random_sequence is True, the sequence in the genes is random.
     Number of clones by bacterial mutation is num_if_clones.
     """
 
-    def basic_mutation(member):
+    def basic_mutation(member, **kwargs):
         """Mutation on all genes with mutation_probability."""
 
         random_index = list(range(member.chromosome_size))
@@ -26,9 +27,9 @@ def mutation_functions(mutation_type, mutation_probability=None, num_of_clones=N
             new_genes.append(gene)
 
         member.genes = new_genes
-        member.calculate_fitness()
+        member.calculate_fitness(**kwargs)
 
-    def bacterial_mutation(member):
+    def bacterial_mutation(member, **kwargs):
         """Bacterial mutation over all genes."""
 
         random_index = list(range(member.chromosome_size))
@@ -39,18 +40,14 @@ def mutation_functions(mutation_type, mutation_probability=None, num_of_clones=N
             for _ in range(num_of_clones):
                 member.set_test()
                 member.genes_test[i] = np.random.rand()
-                member.calculate_fitness_test()
+                member.calculate_fitness_test(**kwargs)
                 member.apply_test_if_better()
 
     if mutation_type == "basic":
         return basic_mutation
-
     elif mutation_type == "bacterial":
         return bacterial_mutation
-
     elif mutation_type is None:
         return None
-
     else:
         raise ValueError("{} mutation type is not valid!".format(mutation_type))
-

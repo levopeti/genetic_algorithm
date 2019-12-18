@@ -76,9 +76,5 @@ def swarm_iteration_functions(iteration_type, inertia, phi_p, phi_g, norm, c_w, 
 
     elif iteration_type is None:
         return None
-
     else:
         raise ValueError("{} iteration type is not valid!".format(iteration_type))
-
-
-

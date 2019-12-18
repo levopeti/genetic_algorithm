@@ -1,11 +1,13 @@
 from abc import ABC
 import os
 import matplotlib as mpl
+
 if os.environ.get('DISPLAY', '') == '':
     print('no display found. Using non-interactive Agg backend')
     mpl.use('Agg')
 import yaml
 import pickle
+import json
 import numpy as np
 from time import time
 from multiprocessing import cpu_count
@@ -79,7 +81,7 @@ class RemoteControl(CallbackBase):
         """Recompile the functions of the algorithm."""
 
         with open(self.config_file, 'r') as config_file:
-            self.model.config = yaml.load(config_file)
+            self.model.config = yaml.safe_load(config_file)
 
         if self.model.config["active"] is True:
             self.model.selection_function = selection_functions(**self.model.config)
@@ -90,19 +92,27 @@ class RemoteControl(CallbackBase):
 
             self.model.stop = self.model.config["stop"]
             self.model.pool = self.model.config["pool"]
-            self.model.pool_size = cpu_count() if self.model.config["pool_size"] is None else self.model.config["pool_size"]
+            self.model.pool_size = cpu_count() if self.model.config["pool_size"] is None else self.model.config[
+                "pool_size"]
             variables = list(self.model.__dict__.keys())
 
             if "elitism" in variables:
                 self.model.elitism = False if self.model.config["elitism"] is None else self.model.config["elitism"]
             if "num_of_new_individual" in variables:
-                self.model.num_of_new_individual = self.model.population_size // 2 if self.model.config["num_of_new_individual"] is None else self.model.config["num_of_new_individual"]
+                self.model.num_of_new_individual = self.model.population_size // 2 if self.model.config[
+                                                                                          "num_of_new_individual"] is None else \
+                self.model.config["num_of_new_individual"]
             if "num_of_crossover" in variables:
-                self.model.num_of_crossover = self.model.population_size // 4 if self.model.config["num_of_crossover"] is None else self.model.config["num_of_crossover"]
+                self.model.num_of_crossover = self.model.population_size // 4 if self.model.config[
+                                                                                     "num_of_crossover"] is None else \
+                    self.model.config["num_of_crossover"]
 
-            self.model.patience = float("inf") if self.model.config["patience"] is None else self.model.config["patience"]
-            self.model.max_iteration = float("inf") if self.model.config["max_iteration"] is None else self.model.config["max_iteration"]
-            self.model.max_fitness_eval = float("inf") if self.model.config["max_fitness_eval"] is None else self.model.config["max_fitness_eval"]
+            self.model.patience = float("inf") if self.model.config["patience"] is None else self.model.config[
+                "patience"]
+            self.model.max_iteration = float("inf") if self.model.config["max_iteration"] is None else \
+                self.model.config["max_iteration"]
+            self.model.max_fitness_eval = float("inf") if self.model.config["max_fitness_eval"] is None else \
+                self.model.config["max_fitness_eval"]
             self.model.min_fitness = 0 if self.model.config["min_fitness"] is None else self.model.config["min_fitness"]
 
 
@@ -118,34 +128,31 @@ class SaveResult(CallbackBase):
         if not os.path.exists(log_dir):
             os.mkdir(log_dir)
 
-    def on_iteration_end(self, logs):
-        if self.iteration_end:
-            result_dict = self.model.best_individual()
-            best_genes = result_dict["best individual"][0]
-            global_best_genes = result_dict["global best individual"][0]
-            real_best_genes = self.model.fitness_function.genotype_to_phenotype(best_genes)
-            real_global_best_genes = self.model.fitness_function.genotype_to_phenotype(global_best_genes)
-            result_dict["real_best_genes"] = real_best_genes
-            result_dict["real_global_best_genes"] = real_global_best_genes
-
-            with open(self.result_file, 'w+') as result_file:
-                result_file.write(str(result_dict))
-
-            print("Bests save in file: ", self.result_file)
-
-    def on_search_end(self, logs):
-        result_dict = self.model.best_individual()
-        best_genes = result_dict["best individual"][0]
-        global_best_genes = result_dict["global best individual"][0]
-        real_best_genes = self.model.fitness_function.genotype_to_phenotype(best_genes)
-        real_global_best_genes = self.model.fitness_function.genotype_to_phenotype(global_best_genes)
+    def save_result(self):
+        result_dict = dict()
+        best_individual_dict = self.model.best_individual()
+        result_dict["best individual"] = best_individual_dict["best individual"][0]
+        result_dict["global best individual"] = best_individual_dict["global best individual"][0]
+        real_best_genes = self.model.fitness_function.genotype_to_phenotype(result_dict["best individual"])
+        real_global_best_genes = self.model.fitness_function.genotype_to_phenotype(
+            result_dict["global best individual"])
         result_dict["real_best_genes"] = real_best_genes
         result_dict["real_global_best_genes"] = real_global_best_genes
 
-        with open(self.result_file, 'w+') as result_file:
-            result_file.write(str(result_dict))
+        for k, v in result_dict.items():
+            result_dict[k] = v.tolist()
 
-        print("Result save in file: ", self.result_file)
+        with open(self.result_file, 'w+') as result_file:
+            json.dump(result_dict, result_file)
+
+        print("Bests save in file: ", self.result_file)
+
+    def on_iteration_end(self, logs):
+        if self.iteration_end:
+            self.save_result()
+
+    def on_search_end(self, logs):
+        self.save_result()
 
 
 class CheckPoint(CallbackBase):
@@ -160,6 +167,7 @@ class CheckPoint(CallbackBase):
         if not os.path.exists(log_dir):
             os.mkdir(log_dir)
 
+    # TODO: track config file
     def on_iteration_end(self, logs):
         if not self.only_last:
             file_name = self.checkpoint_file + "_{}".format(self.model.iteration)
@@ -206,7 +214,8 @@ class DimReduction(CallbackBase):
             population = np.array(population)
             fitness_values = np.array(fitness_values)
 
-            embedded_population = TSNE(n_components=self.dimensions, perplexity=self.perplexity).fit_transform(population)
+            embedded_population = TSNE(n_components=self.dimensions, perplexity=self.perplexity).fit_transform(
+                population)
 
             if self.dimensions == 2:
                 plt.scatter(embedded_population[:, 0], embedded_population[:, 1], c=fitness_values)
@@ -214,7 +223,8 @@ class DimReduction(CallbackBase):
             elif self.dimensions == 3:
                 fig = plt.figure()
                 ax = Axes3D(fig)
-                h = ax.scatter(embedded_population[:, 0], embedded_population[:, 1], embedded_population[:, 2], c=fitness_values)
+                h = ax.scatter(embedded_population[:, 0], embedded_population[:, 1], embedded_population[:, 2],
+                               c=fitness_values)
 
                 fig.colorbar(h)
 
@@ -225,4 +235,3 @@ class DimReduction(CallbackBase):
 
             plt.close()
             print("TSNE time: {0:.2f}s".format(time() - start))
-

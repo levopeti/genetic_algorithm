@@ -1,7 +1,7 @@
 from graphics import GraphWin, Entry, Point, Text, Rectangle
 import yaml
 from threading import Thread
-import methaboard
+from utils import methaboard
 
 config = None
 mb = None
@@ -10,13 +10,13 @@ mb = None
 def load_logs(config_file):
     global config
     with open(config_file, 'r') as config_file:
-        config = yaml.load(config_file)
+        config = yaml.safe_load(config_file)
 
 
 def write_logs(config_file):
     global config
     with open(config_file, "w+") as log_file:
-        yaml.dump(config, log_file, default_flow_style=False)
+        yaml.safe_dump(config, log_file, default_flow_style=False)
 
 
 def button(ll_point, ur_point, text, color="white"):
@@ -133,7 +133,7 @@ def run_methaboard():
 
     if mb is None:
         mb = methaboard.MethaBoard()
-        path = "/home/biot/projects/research/genetic_algorithm/logs/" + methaboard_entry[0].getText() + "/log"
+        path = "./logs/" + methaboard_entry[0].getText() + "/log"
         thread = Thread(target=mb.run, args=(path, ))
         thread.setDaemon(False)
         thread.start()
@@ -144,8 +144,8 @@ def run_methaboard():
         methaboard_entry[1].undraw()
 
 
-origin_logs_path = "/home/biot/projects/research/genetic_algorithm/config.yml"
-tmp_logs_path = "/home/biot/projects/research/genetic_algorithm/config_tmp.yml"
+origin_logs_path = "./config.yml"
+tmp_logs_path = "./config_tmp.yml"
 
 load_logs(tmp_logs_path)
 

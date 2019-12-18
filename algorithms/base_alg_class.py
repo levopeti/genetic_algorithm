@@ -144,28 +144,32 @@ class BaseAlgorithmClass(ABC):
         self.best_fitness = self.population.get_best_fitness()
         self.callbacks_on_search_begin()
 
-        while self.no_improvement < self.patience and self.max_iteration >= self.iteration \
-                and self.min_fitness < self.best_fitness and self.max_fitness_eval > self.num_of_fitness_eval \
-                and self.stop is False:
-            start = time.time()
-            print('*' * 36, '{}. iteration'.format(self.iteration), '*' * 36)
-            best_fitness_before_iteration = self.population.get_best_fitness()
-            self.next_iteration()
+        try:
+            while self.no_improvement < self.patience and self.max_iteration >= self.iteration \
+                    and self.min_fitness < self.best_fitness and self.max_fitness_eval > self.num_of_fitness_eval \
+                    and self.stop is False:
+                start = time.time()
+                print('*' * 36, '{}. iteration'.format(self.iteration), '*' * 36)
+                best_fitness_before_iteration = self.population.get_best_fitness()
+                self.next_iteration()
 
-            iteration_time = time.time() - start
-            print('Number of fitness evaluation so far: ', self.num_of_fitness_eval)
-            print('Iteration process time: {0:.2f}s\n\n'.format(iteration_time))
+                iteration_time = time.time() - start
+                print('Number of fitness evaluation so far: ', self.num_of_fitness_eval)
+                print('Iteration process time: {0:.2f}s\n\n'.format(iteration_time))
 
-            if self.best_fitness > self.population.get_global_best().fitness:
-                self.no_improvement = 0
-                self.best_fitness = self.population.get_global_best().fitness
-            else:
-                self.no_improvement += 1
+                if self.best_fitness > self.population.get_global_best().fitness:
+                    self.no_improvement = 0
+                    self.best_fitness = self.population.get_global_best().fitness
+                else:
+                    self.no_improvement += 1
 
-            self.iteration_update_log(iteration_time, best_fitness_before_iteration)
-            self.callbacks_on_iteration_end()
+                self.iteration_update_log(iteration_time, best_fitness_before_iteration)
+                self.callbacks_on_iteration_end()
 
-            self.iteration += 1
+                self.iteration += 1
+        except KeyboardInterrupt:
+            # in case of Ctrl + c the self.callbacks_on_search_end() should be called
+            pass
 
         self.callbacks_on_search_end()
 
@@ -182,7 +186,6 @@ class BaseAlgorithmClass(ABC):
 
     def iteration_update_log(self, step_time, best_fitness_before_iteration):
         """Update self.logs on iter end."""
-
         best_fitness = self.population.get_best_fitness()
         improvement = - (best_fitness - best_fitness_before_iteration)
 

@@ -10,7 +10,8 @@ class ChromosomeBase(ABC):
     """Base class of chromosome for metaheuristic algorithms."""
 
     __slots__ = "chromosome_size", "__fitness", "__genes",\
-                "__fitness_test", "__genes_test", "fitness_function"
+                "__fitness_test", "__genes_test", "fitness_function",\
+                "num_fitness_eval", "counter"
 
     def __init__(self, chromosome_size, fitness_function):
         self.chromosome_size = chromosome_size

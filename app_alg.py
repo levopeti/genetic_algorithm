@@ -3,13 +3,24 @@ import os
 import datetime
 import argparse
 
-from fitness_functions.fitness_function import RastriginFunction, FullyConnected, ConvNet
+from fitness_functions.fitness_function import RastriginFunction, FullyConnected, ConvNet, TriangleDraw, CircleDraw
 from elements.callbacks import LogToFile, RemoteControl, SaveResult, CheckPoint, DimReduction
 from algorithms.pso_alg import ParticleSwarm
 from algorithms.gen_alg import GeneticAlgorithm
 
+fitness_func_dict = {"rf": RastriginFunction,
+                     "fc": FullyConnected,
+                     "cn": ConvNet,
+                     "td": TriangleDraw,
+                     "cd": CircleDraw,
+                     }
 
-def configure_algorithm(parameters):
+algorithm_dict = {"gen": GeneticAlgorithm,
+                  "pso": ParticleSwarm,
+                  }
+
+
+def get_path(parameters):
     if parameters["dir_path"]:
         path = parameters.path
     else:
@@ -19,10 +30,12 @@ def configure_algorithm(parameters):
         else:
             path = "./logs/{}-{}-{}".format(parameters["type"], parameters["fitness_function"],
                                             datetime.datetime.now().strftime('%y-%m-%d-%H:%M'))
-
     if not os.path.exists(path):
         os.mkdir(path)
+    return path
 
+
+def get_config(parameters, path):
     if parameters["config_path"]:
         with open(parameters["config_path"], 'r') as config_file:
             config = yaml.safe_load(config_file)
@@ -34,35 +47,39 @@ def configure_algorithm(parameters):
     with open(config_path, "w+") as log_file:
         yaml.dump(config, log_file, default_flow_style=False)
 
-    alg = None
-    if parameters["type"] == "gen":
-        alg = GeneticAlgorithm(**config)
-    elif parameters["type"] == "pso":
-        alg = ParticleSwarm(**config)
+    return config, config_path
 
-    fitness_func = None
-    if parameters["fitness_function"] == "rf":
-        fitness_func = RastriginFunction()
-    elif parameters["fitness_function"] == "fc":
-        fitness_func = FullyConnected()
-    elif parameters["fitness_function"] == "cn":
-        fitness_func = ConvNet()
+
+def get_callback_list(parameters, path, config_path):
+    callback_dict = {"ltf": lambda: LogToFile(log_dir=path),
+                     "rc": lambda: RemoteControl(config_file=config_path),
+                     "cp": lambda: SaveResult(log_dir=path, iteration_end=True),
+                     "sr": lambda: CheckPoint(log_dir=path, only_last=True),
+                     "dr": lambda: DimReduction(log_dir=path, dimensions=2, frequency=2, plot_runtime=False),
+                     }
 
     callback_list = []
-    if "ltf" in parameters["callbacks"] or parameters["all_cb"]:
-        callback_list.append(LogToFile(log_dir=path))
+    for cb in parameters["callbacks"]:
+        callback_list.append(callback_dict[cb]())
 
-    if "rc" in parameters["callbacks"] or parameters["all_cb"]:
-        callback_list.append(RemoteControl(config_file=config_path))
+    if parameters["all_cb"]:
+        for callback in callback_dict.values():
+            callback_list.append(callback())
 
-    if "sr" in parameters["callbacks"] or parameters["all_cb"]:
-        callback_list.append(SaveResult(log_dir=path, iteration_end=True))
+    return callback_list
 
-    if "cp" in parameters["callbacks"] or parameters["all_cb"]:
-        callback_list.append(CheckPoint(log_dir=path, only_last=True))
 
-    if "dr" in parameters["callbacks"] or parameters["all_cb"]:
-        callback_list.append(DimReduction(log_dir=path, dimensions=2, frequency=2, plot_runtime=False))
+def configure_algorithm(parameters):
+    path = get_path(parameters)
+
+    config, config_path = get_config(parameters, path)
+
+    # TODO: **config --> config object
+    alg = algorithm_dict[parameters["type"]](**config)
+
+    fitness_func = fitness_func_dict[parameters["fitness_function"]]()
+
+    callback_list = get_callback_list(parameters, path, config_path)
 
     if parameters["load"]:
         alg.load_population(checkpoint_path=parameters["load"])
@@ -70,6 +87,7 @@ def configure_algorithm(parameters):
     alg.compile(config=config, fitness_function=fitness_func, callbacks=callback_list)
 
     return alg
+
 
 # TODO: show result, dimred with const metric, graphic_config, messy genetic, pause/continue
 
@@ -88,7 +106,7 @@ if __name__ == '__main__':
                              ' sr: SaveResult, cp: CheckPoint, dr: DimReduction',
                         default=[], type=str, nargs='+')
     parser.add_argument('--ff', help='Set the fitness function. rf: Rastrigin, fc: FullyConnected, cn: ConvNet',
-                        choices=['rf', 'fc', 'cn'], default='rf', type=str)
+                        choices=['rf', 'fc', 'cn', 'td', 'cd'], default='rf', type=str)
     parser.add_argument('--all_cb', help='Use all of the callbacks.', action='store_true')
 
     # Parse the input parameters to the script

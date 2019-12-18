@@ -1,9 +1,11 @@
 import numpy as np
 import math
+import cv2
 from abc import ABC, abstractmethod
 
 from fitness_functions.fully_connected_nn import train_model_fc
 from fitness_functions.conv_nn import train_model_cn
+from fitness_functions.draw_ff import triangle_draw_ff, circle_draw_ff
 
 
 class FitnessFunctionBase(ABC):
@@ -183,5 +185,93 @@ class ConvNet(FitnessFunctionBase):
                 "Number of parameters ratio: ": num_of_params_ratio / 5}
 
 
+class TriangleDraw(FitnessFunctionBase):
+    """
+    Approximate a colour image with triangles.
+    One chromosome contains the (x, y) coordinates of the 3 points and the (rgba) colour of the triangle.
+    """
 
+    def __init__(self):
+        super().__init__()
+
+        self.image = cv2.imread("/home/AD.ADASWORKS.COM/levente.peto/projects/research/kislevi.jpg")
+        self.heigth = self.image.shape[1]
+        self.width = self.image.shape[0]
+        self.name = "triangle drawer"
+
+    def fitness_function(self, phenotype_of_genes):
+        fitness_value = triangle_draw_ff(self.image, phenotype_of_genes)
+        return fitness_value
+
+    def genotype_to_phenotype(self, genes, **kwargs):
+        """
+        phenotype: (x1, y1, x2, y2, x3, y3, R, G, B, alpha) * number of triangles
+        """
+        genes = np.array(genes).reshape(-1, 10)
+        phenotype_of_genes = np.zeros_like(genes)
+
+        for index in range(genes.shape[0]):
+            # scale x coordinates
+            x_idx = [0, 2, 4]
+            phenotype_of_genes[index][x_idx] = genes[index][x_idx] * self.heigth
+
+            # scale y coordinates
+            y_idx = [1, 3, 5]
+            phenotype_of_genes[index][y_idx] = genes[index][y_idx] * self.width
+
+            # scale rgb
+            rgb_idx = [6, 7, 8]
+            phenotype_of_genes[index][rgb_idx] = genes[index][rgb_idx] * 255
+
+            # alpha
+            phenotype_of_genes[index][9] = genes[index][9]
+
+        return phenotype_of_genes
+
+
+class CircleDraw(FitnessFunctionBase):
+    """
+    Approximate a colour image with circles.
+    One chromosome contains the (x, y) coordinates of the center point and the (rgb) colour of the circle.
+    """
+
+    def __init__(self):
+        super().__init__()
+
+        self.image = cv2.imread("/home/AD.ADASWORKS.COM/levente.peto/projects/research/kislevi.jpg")
+        self.heigth = self.image.shape[1]
+        self.width = self.image.shape[0]
+        self.name = "circle drawer"
+
+        self.max_radius = min(self.heigth, self.width) / 8
+
+    def fitness_function(self, phenotype_of_genes):
+        fitness_value = circle_draw_ff(self.image, phenotype_of_genes)
+        return fitness_value
+
+    def genotype_to_phenotype(self, genes, **kwargs):
+        """
+        phenotype: (x, y, radius, R, G, B, alpha) * number of circles
+        """
+        genes = np.array(genes).reshape(-1, 7)
+        phenotype_of_genes = np.zeros_like(genes)
+
+        for index in range(genes.shape[0]):
+            # scale x coordinate
+            phenotype_of_genes[index][0] = genes[index][0] * self.heigth
+
+            # scale y coordinate
+            phenotype_of_genes[index][1] = genes[index][1] * self.width
+
+            # scale radius
+            phenotype_of_genes[index][2] = genes[index][2] * self.max_radius
+
+            # scale rgb
+            rgb_idx = [3, 4, 5]
+            phenotype_of_genes[index][rgb_idx] = genes[index][rgb_idx] * 255
+
+            # alpha
+            phenotype_of_genes[index][6] = genes[index][6]
+
+        return phenotype_of_genes
 

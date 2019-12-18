@@ -10,7 +10,7 @@ def memetic_functions(memetic, number_of_steps, step_size, lamarck_random_sequen
     :param lamarck_random_sequence: If True, the sequence in the genes is random.
     """
 
-    def local_search(member):
+    def local_search(member, **kwargs):
         for _ in range(number_of_steps):
             random_index = list(range(member.chromosome_size))
             if lamarck_random_sequence:

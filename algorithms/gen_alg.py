@@ -48,7 +48,8 @@ class GeneticAlgorithm(BaseAlgorithmClass):
         rank the population by fitness according to the order specified.
         """
         if self.population is None:
-            self.population = Population(self.population_size, self.chromosome_size, self.fitness_function, self.pool, self.pool_size)
+            self.population = Population(self.population_size, self.chromosome_size, self.fitness_function, self.pool,
+                                         self.pool_size)
 
     def init_steps(self):
         """Initialize the iteration steps."""
@@ -87,7 +88,9 @@ class GeneticAlgorithm(BaseAlgorithmClass):
             current_function = partial(self.population.differential_evolution, self.config["CR"], self.config["F"])
             iterator = range(len(self.population))
         elif name == "Invasive weed":
-            current_function = partial(self.population.invasive_weed, self.iteration, self.config["iter_max"], self.config["e"], self.config["sigma_init"], self.config["sigma_fin"], self.config["N_min"], self.config["N_max"])
+            current_function = partial(self.population.invasive_weed, self.iteration, self.config["iter_max"],
+                                       self.config["e"], self.config["sigma_init"], self.config["sigma_fin"],
+                                       self.config["N_min"], self.config["N_max"])
             iterator = self.population[:]
         elif name == "Add pure new":
             current_function = self.population.add_new_individual
