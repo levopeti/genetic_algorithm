@@ -72,7 +72,7 @@ class ChromosomeBase(ABC):
         if value >= 0:
             self.__fitness = value
         else:
-            raise ValueError("Fitness value must be greater or equal then 0!")
+            raise ValueError("Fitness value must be greater or equal than 0!")
 
     @genes.setter
     def genes(self, genes):

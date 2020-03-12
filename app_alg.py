@@ -2,11 +2,13 @@ import yaml
 import os
 import datetime
 import argparse
+from termcolor import colored
 
 from fitness_functions.fitness_function import RastriginFunction, FullyConnected, ConvNet, TriangleDraw, CircleDraw
 from elements.callbacks import LogToFile, RemoteControl, SaveResult, CheckPoint, DimReduction
 from algorithms.pso_alg import ParticleSwarm
 from algorithms.gen_alg import GeneticAlgorithm
+from utils.log_maker import load_from_yaml, load_from_json, set_config_path
 
 fitness_func_dict = {"rf": RastriginFunction,
                      "fc": FullyConnected,
@@ -37,11 +39,14 @@ def get_path(parameters):
 
 def get_config(parameters, path):
     if parameters["config_path"]:
-        with open(parameters["config_path"], 'r') as config_file:
-            config = yaml.safe_load(config_file)
+        if parameters["config_path"].endswith('.yaml'):
+            load_from_yaml(parameters["config_path"])
+        elif parameters["config_path"].endswith('.json'):
+            load_from_json(parameters["config_path"])
+        else:
+            print(colored("Config json: ", 'red') + "Config file has invalid extension.")
     else:
-        with open("config_tmp.yml", 'r') as config_file:
-            config = yaml.safe_load(config_file)
+        load_from_yaml("config_tmp.yml")
 
     config_path = os.path.join(path, "config.yml")
     with open(config_path, "w+") as log_file:

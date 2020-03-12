@@ -192,7 +192,8 @@ class BaseAlgorithmClass(ABC):
         if self.iteration == 1:
             sum_of_eval = self.num_of_fitness_eval
         else:
-            sum_of_eval = self.num_of_fitness_eval - sum(self.logs[i]["iteration_end"]["sum_of_eval"] for i in range(len(self.logs) - 1))
+            sum_of_eval = self.num_of_fitness_eval - sum(
+                self.logs[i]["iteration_end"]["sum_of_eval"] for i in range(len(self.logs) - 1))
 
         self.logs[-1]["iteration_end"] = {"iteration": self.iteration,
                                           "step_time": step_time,
@@ -241,7 +242,8 @@ class BaseAlgorithmClass(ABC):
         """Return the individual with the best fitness in the current generation."""
         best_genes = self.population.get_best_genes()
         best_fitness = self.population.get_best_fitness()
-        return {"best individual": (best_genes, best_fitness), "global best individual": (self.population.get_global_best().genes, self.population.get_global_best().fitness)}
+        return {"best individual": (best_genes, best_fitness), "global best individual": (
+        self.population.get_global_best().genes, self.population.get_global_best().fitness)}
 
     def rank_population(self):
         """Sort the population by fitness ascending order."""
@@ -299,5 +301,3 @@ class BaseAlgorithmClass(ABC):
 
         self.population = population
         print('Load population from {}.'.format(checkpoint_path))
-
-

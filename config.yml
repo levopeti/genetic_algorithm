@@ -2,7 +2,7 @@ active: False
 
 ####### Population and other
 population_size: 100
-chromosome_size: 100
+chromosome_size: 45
 pool: False
 # default: cpu_count()
 pool_size: 4
